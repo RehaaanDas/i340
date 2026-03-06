@@ -99,7 +99,7 @@ void CPU(){
         ((Assembled >> 24) == 161)||
         ((Assembled >> 24) == 177)){
                     timerSetTransit = 1;
-                    cout << "\n[timerSet in transit due to " << Assembled << "]\n";
+                    //cout << "\n[timerSet in transit due to " << Assembled << "]\n";
     }
 
     if(CLK) CU(Assembled);
@@ -445,12 +445,25 @@ int MEMRead(int MEMSOut){
     }
 }
 
+void unicodelog(int codepoint){
+    if(codepoint < 128){
+        cout << (char)codepoint;
+    } else if(codepoint < 2048){
+        cout << (char)(192 + (codepoint >> 6));
+        cout << (char)(128 + (codepoint & 63));
+    } else if(codepoint < 65536){
+        cout << (char)(224 + (codepoint >> 12));
+        cout << (char)(128 + ((codepoint >> 6) & 63));
+        cout << (char)(128 + (codepoint & 63));
+    }
+}
+
 void RFIn(int CLK, int WE, unsigned int RFSIn, unsigned int RFDIn){
     if(CLK && WE){
         RF[RFSIn] = RFDIn;
         if(RFSIn == 1) Timer = RFDIn;
 
-        if(RFSIn == 3 && !STALL) cout << (char)RF[3];
+        if(RFSIn == 3 && !STALL) unicodelog(RF[3]);
         //cout << "\n[wrote " << RFDIn << " to R" << RFSIn << "]\n";
     }
 

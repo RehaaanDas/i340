@@ -5,7 +5,6 @@ import sys
 
 with open(sys.argv[1], "r") as file:
     program = file.readlines()
-    print(program)
 
 def append(data):
     with open(sys.argv[2], "a") as file:
@@ -97,3 +96,4 @@ for instruction in program:
         append(str(int(lower, 2)) + "\n")
     if type == 1:
         append(str(int(binary, 2)) + "\n")
+        append("0000000000000000\n")
