@@ -487,6 +487,7 @@ int ALU(int type, unsigned int Accumulator, unsigned int Operand){
     if(type) result = Accumulator - Operand;
     else result =  Accumulator + Operand;
 
+    Z = N = O = 0;
     if(!result) Z = 1;
     if(type && (Operand > Accumulator)) N = 1;
     if(result > 65535) O = 1;
