@@ -1,9 +1,11 @@
 #include <iostream>
 #include <cstdint>
 #include <windows.h>
+#include <mutex>
 #include "cpu.h"
 
 using namespace std;
+mutex theMutex;
 
 HANDLE hInput = GetStdHandle(STD_INPUT_HANDLE);
 
@@ -414,6 +416,7 @@ CUStageOut  WB( uint64_t payload ){
 };
 
 void MEMWrite(int MEMSIn, int MEMDIn){
+    lock_guard<mutex> lock(theMutex);
     switch(MEMSIn){
         case 0xFFFF:
             ioISR = MEMDIn;
@@ -433,6 +436,7 @@ void MEMWrite(int MEMSIn, int MEMDIn){
 }
 
 int MEMRead(int MEMSOut){
+    lock_guard<mutex> lock(theMutex);
     switch(MEMSOut){
         case 0xFFFF:
             return ioISR;
