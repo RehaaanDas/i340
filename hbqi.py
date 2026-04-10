@@ -45,12 +45,40 @@ for num, instruction in enumerate(program):
                 binary += format(int(instruction[1][1:]), "04b")
                 binary += format(int(instruction[2]), "016b")
             case "ADD":
-                binary += "1010"
+                binary += "101000"
                 binary += format(int(instruction[1][1:]), "04b")
                 binary += format(int(instruction[2][1:]), "04b")
                 binary += format(int(instruction[3][1:]), "04b")
             case "SUB":
-                binary += "1011"
+                binary += "101001"
+                binary += format(int(instruction[1][1:]), "04b")
+                binary += format(int(instruction[2][1:]), "04b")
+                binary += format(int(instruction[3][1:]), "04b")
+            case "XOR":
+                binary += "101010"
+                binary += format(int(instruction[1][1:]), "04b")
+                binary += format(int(instruction[2][1:]), "04b")
+            case "XORB":
+                binary += "101011"
+                binary += format(int(instruction[1][1:]), "04b")
+                binary += format(int(instruction[2][1:]), "04b")
+                binary += format(int(instruction[3][1:]), "04b")
+            case "NOT":
+                binary += "101100"
+                binary += format(int(instruction[1][1:]), "04b")
+                binary += format(int(instruction[2][1:]), "04b")
+            case "NOTB":
+                binary += "101101"
+                binary += format(int(instruction[1][1:]), "04b")
+                binary += format(int(instruction[2][1:]), "04b")
+                binary += format(int(instruction[3][1:]), "04b")
+            case "ANDB":
+                binary += "101110"
+                binary += format(int(instruction[1][1:]), "04b")
+                binary += format(int(instruction[2][1:]), "04b")
+                binary += format(int(instruction[3][1:]), "04b")
+            case "ORB":
+                binary += "101111"
                 binary += format(int(instruction[1][1:]), "04b")
                 binary += format(int(instruction[2][1:]), "04b")
                 binary += format(int(instruction[3][1:]), "04b")
@@ -98,4 +126,4 @@ for num, instruction in enumerate(program):
             append(str(int(binary, 2)) + "\n")
             append("0000000000000000\n")
     except:
-        print(f"Failed at '{"".join(instruction)}'@line {num}")
+        print(f"\x1B[31m{num}  {"".join(instruction)}\x1B[0m")
