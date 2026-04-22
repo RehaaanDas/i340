@@ -97,11 +97,10 @@ void CPU(){
     uint32_t Assembled = (ASMReg << 16) | M[PCReg];
 
     timerSetTransitPrev = timerSetTransit;
-    if( ((Assembled >> 24) == 33) || 
-        ((Assembled >> 24) == 49) || 
-        ((Assembled >> 25) == 49) ||
-        ((Assembled >> 24) == 161)||
-        ((Assembled >> 24) == 177)){
+    if( ((Assembled >> 24) == 33) || //LDI
+        ((Assembled >> 24) == 49) || //LDR
+        ((Assembled >> 25) == 49) || //REG
+        (((Assembled & 3825205247 ) >> 22) == 641)){ //ALU
                     timerSetTransit = 1;
                     //cout << "\n[timerSet in transit due to " << Assembled << "]\n";
     }
@@ -498,20 +497,22 @@ int ALU(int type, unsigned int Accumulator, unsigned int Operand){
     int result;
 
     switch(type){
-        case 0: result =  Accumulator + Operand;
-        case 1: result = Accumulator - Operand;
-        case 2: result = __builtin_parityll(Accumulator);
-        case 3: result = Accumulator ^ Operand;
-        case 4: result = !Accumulator;
-        case 5: result = ~Accumulator;
-        case 6: result = Accumulator & Operand;
-        case 7: result = Accumulator | Operand;
+        case 0: result =  Accumulator + Operand; break;
+        case 1: result = Accumulator - Operand; break;
+        case 2: result = __builtin_parityll(Accumulator); break;
+        case 3: result = Accumulator ^ Operand; break;
+        case 4: result = !Accumulator; break;
+        case 5: result = ~Accumulator; break;
+        case 6: result = Accumulator & Operand; break;
+        case 7: result = Accumulator | Operand; break;
     }
 
     Z = N = O = 0;
     if(!result) Z = 1;
-    if(type && (Operand > Accumulator)) N = 1;
+    if((type==1) && (Operand > Accumulator)) N = 1;
     if(result > 65535) O = 1;
+
+    //cout << Accumulator << " " << type << " " << Operand << " = " << result; 
 
     return result;
 }
