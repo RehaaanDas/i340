@@ -53,6 +53,8 @@ unsigned int RFWE, RFSIn, RFDIn = 0;
 int Timer = 0;
 int CLK = 1;
 
+int MOffset = 0;
+
 int tISR = 0; //0xFFFD
 int ioISR = 0; //0xFFFF
 int ioRet = 0; //0xFFFE
@@ -95,11 +97,10 @@ void CPU(){
     uint32_t Assembled = (ASMReg << 16) | M[PCReg];
 
     timerSetTransitPrev = timerSetTransit;
-    if( ((Assembled >> 24) == 33) || 
-        ((Assembled >> 24) == 49) || 
-        ((Assembled >> 25) == 49) ||
-        ((Assembled >> 24) == 161)||
-        ((Assembled >> 24) == 177)){
+    if( ((Assembled >> 24) == 33) || //LDI
+        ((Assembled >> 24) == 49) || //LDR
+        ((Assembled >> 25) == 49) || //REG
+        (((Assembled & 3825205247 ) >> 22) == 641)){ //ALU
                     timerSetTransit = 1;
                     //cout << "\n[timerSet in transit due to " << Assembled << "]\n";
     }
@@ -184,11 +185,14 @@ CUStageOut  ID( uint64_t instruction ){
             
             break;
         case 5: //ALU
-            payload |= (1ULL << (39 - source));
-            payload |= (((instruction >> 24) & 15) << 24); //TF1
-            payload |= (((instruction >> 20) & 15) << 20); //TF2
-            payload |= (((instruction >> 16) & 15) << 16); //TF3
-            break;
+            if(condition > 1){
+                payload |= (1ULL << (53 - condition));
+            } else {
+                payload |= (1ULL << (39 - condition));
+            }
+            payload |= (((instruction >> 22) & 15) << 24); //TF1
+            payload |= (((instruction >> 18) & 15) << 20); //TF2
+            payload |= (((instruction >> 14) & 15) << 16); //TF3
         case 4: //MEM
             payload |= (1ULL << 40);
             payload |= (((instruction >> 25) & 15) << 24); //TF1
@@ -428,8 +432,13 @@ void MEMWrite(int MEMSIn, int MEMDIn){
 
             //cout << "\n[ tISR set to " << MEMDIn << "]\n"; 
             break;
+        case 0xFFF3:
+
+            MOffset = MEMDIn;
+            break;
         default:
-            M[MEMSIn] = MEMDIn;
+            if(MEMSIn >= 0xFFF3) M[MEMSIn] = MEMDIn;
+            else M[MEMSIn+MOffset] = MEMDIn;
 
             //cout << "\n[" << MEMDIn << " written to address " << MEMSIn << "]\n"; 
     }
@@ -444,8 +453,11 @@ int MEMRead(int MEMSOut){
             return ioRet;
         case 0xFFFD:
             return tISR;
+        case 0xFFF3:
+            return MOffset;
         default:
-            return M[MEMSOut];
+            if(MEMSOut >= 0xFFF3) return M[MEMSOut];
+            else return M[MEMSOut+MOffset];
     }
 }
 
@@ -484,13 +496,23 @@ int RFOut(unsigned int RFSOut){
 int ALU(int type, unsigned int Accumulator, unsigned int Operand){
     int result;
 
-    if(type) result = Accumulator - Operand;
-    else result =  Accumulator + Operand;
+    switch(type){
+        case 0: result =  Accumulator + Operand; break;
+        case 1: result = Accumulator - Operand; break;
+        case 2: result = __builtin_parityll(Accumulator); break;
+        case 3: result = Accumulator ^ Operand; break;
+        case 4: result = !Accumulator; break;
+        case 5: result = ~Accumulator; break;
+        case 6: result = Accumulator & Operand; break;
+        case 7: result = Accumulator | Operand; break;
+    }
 
     Z = N = O = 0;
     if(!result) Z = 1;
-    if(type && (Operand > Accumulator)) N = 1;
+    if((type==1) && (Operand > Accumulator)) N = 1;
     if(result > 65535) O = 1;
+
+    //cout << Accumulator << " " << type << " " << Operand << " = " << result; 
 
     return result;
 }
