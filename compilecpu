@@ -1,0 +1,5 @@
+#!/bin/bash
+chmod +x ~/.Code/i340/compilecpu
+
+kill $(ps -ef | grep "cpuenv" | awk -F'    ' '{print $3}')
+clang++ cpuEnv.cpp CPU/cpu.cpp -o cpuenv.exe
